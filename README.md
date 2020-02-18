@@ -42,13 +42,27 @@ EAF is an extensible framework, one can develop any Qt5 application and integrat
 2. Make sure to have ```python3``` installed, and use ```pip3``` to install all EAF dependencies (see below list for details)
 
 ```Bash
-sudo pip3 install dbus-python python-xlib pyqt5 pyqtwebengine pymupdf grip qrcode feedparser aria2p
+# ubuntu 18.04
+sudo apt-get install python3
+sudo apt-get install python3-pip
+cat >  ~/.pip/pip.conf <<-EOF
+[global]
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+
+[install]
+trusted-host = https://pypi.tuna.tsinghua.edu.cn
+EOF
+sudo apt-get install virtualenvwrapper
+mkvirtualenv -p /usr/bin/python3.6 env36
+workon env36
+pip3 install dbus-python python-xlib pyqt5 pyqtwebengine pymupdf grip qrcode feedparser aria2p
 ```
 
 3. Clone this repository.
 
 ```Bash
-git clone https://github.com/manateelazycat/emacs-application-framework.git --depth=1
+cd ~
+git clone https://github.com/qinshulei/emacs-application-framework.git
 ```
 
 4. Add the full path to the EAF installation directory to your Emacs ```load-path```, then add the following to `init.el`:
