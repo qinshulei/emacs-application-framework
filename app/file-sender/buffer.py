@@ -24,13 +24,39 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
 from core.buffer import Buffer
+from core.utils import get_free_port
+import http.server as BaseHTTPServer
+import os
 import qrcode
+import shutil
+import sys
+import threading
+import socket
 
 class AppBuffer(Buffer):
     def __init__(self, buffer_id, url, config_dir, arguments, emacs_var_dict):
         Buffer.__init__(self, buffer_id, url, arguments, emacs_var_dict, False, QColor(0, 0, 0, 255))
 
-        self.add_widget(AirShareWidget(url, QColor(0, 0, 0, 255)))
+        self.add_widget(FileTransferWidget(url, QColor(0, 0, 0, 255)))
+
+class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        global local_file_path
+
+        try:
+
+            with open(local_file_path, 'rb') as f:
+                self.send_response(200)
+                self.send_header("Content-Type", 'application/octet-stream')
+                self.send_header("Content-Disposition", 'attachment; filename="{}"'.format(os.path.basename(local_file_path)))
+                fs = os.fstat(f.fileno())
+                self.send_header("Content-Length", str(fs.st_size))
+                self.end_headers()
+                shutil.copyfileobj(f, self.wfile)
+        except socket.error:
+            # Don't need handle socket error.
+            pass
 
 class Image(qrcode.image.base.BaseImage):
     def __init__(self, border, width, box_size):
@@ -55,16 +81,18 @@ class Image(qrcode.image.base.BaseImage):
     def save(self, stream, kind=None):
         pass
 
-class AirShareWidget(QWidget):
+class FileTransferWidget(QWidget):
     def __init__(self, url, color):
         QWidget.__init__(self)
         self.setStyleSheet("background-color: black")
+
+        file_path = os.path.expanduser(url)
 
         self.file_name_font = QFont()
         self.file_name_font.setPointSize(24)
 
         self.file_name_label = QLabel(self)
-        self.file_name_label.setText(url)
+        self.file_name_label.setText(file_path)
         self.file_name_label.setFont(self.file_name_font)
         self.file_name_label.setAlignment(Qt.AlignCenter)
         self.file_name_label.setStyleSheet("color: #eee")
@@ -74,7 +102,7 @@ class AirShareWidget(QWidget):
         self.notify_font = QFont()
         self.notify_font.setPointSize(12)
         self.notify_label = QLabel(self)
-        self.notify_label.setText("Scan QR code above to copy data.")
+        self.notify_label.setText("Scan QR code above to download this file on your smartphone.\nMake sure the smartphone is connected to the same WiFi network as this computer.")
         self.notify_label.setFont(self.notify_font)
         self.notify_label.setAlignment(Qt.AlignCenter)
         self.notify_label.setStyleSheet("color: #eee")
@@ -89,15 +117,42 @@ class AirShareWidget(QWidget):
         layout.addWidget(self.notify_label, 0, Qt.AlignCenter)
         layout.addStretch()
 
-        self.qrcode_label.setPixmap(qrcode.make(url, image_factory=Image).pixmap())
+        self.start_server(file_path)
+
+    def set_address(self, address):
+        self.qrcode_label.setPixmap(qrcode.make(address, image_factory=Image).pixmap())
+
+    def get_local_ip(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        except OSError:
+            print("Network is unreachable")
+            sys.exit()
+
+    def start_server(self, filename):
+        global local_file_path
+
+        local_file_path = filename
+
+        self.port = get_free_port()
+        self.local_ip = self.get_local_ip()
+        self.set_address("http://{0}:{1}/{2}".format(self.local_ip, self.port, filename))
+
+        t = threading.Thread(target=self.run_http_server, name='LoopThread')
+        t.start()
+
+    def run_http_server(self):
+        httpd = BaseHTTPServer.HTTPServer(('', self.port), SimpleHTTPRequestHandler)
+        httpd.serve_forever()
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
-    import sys
     import signal
     app = QApplication(sys.argv)
 
-    test = AirShareWidget("/home/andy/rms/1.jpg", QColor(0, 0, 0, 255))
+    test = FileTransferWidget("/home/andy/rms/1.jpg", QColor(0, 0, 0, 255))
     test.show()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)

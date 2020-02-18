@@ -19,8 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import functools
 from PyQt5 import QtCore
+import functools
+import os
+import socket
 
 class PostGui(QtCore.QObject):
 
@@ -49,16 +51,29 @@ class PostGui(QtCore.QObject):
         else:
             self._func(*args, **kwargs)
 
-def file_is_image(file_info):
-    for track in file_info.tracks:
-        if track.track_type == "Image":
-            return True
+def touch(path):
+    if not os.path.exists(path):
+        basedir = os.path.dirname(path)
 
-    return False
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
 
-def file_is_video(file_info):
-    for track in file_info.tracks:
-        if track.track_type == "Video":
-            return True
+        with open(path, 'a'):
+            os.utime(path)
 
-    return False
+def get_free_port():
+    """
+    Determines a free port using sockets.
+    """
+    free_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    free_socket.bind(('0.0.0.0', 0))
+    free_socket.listen(5)
+    port = free_socket.getsockname()[1]
+    free_socket.close()
+
+    return port
+
+def is_port_in_use(port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0

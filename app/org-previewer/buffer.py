@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2011 ~ 2014 Andy Stewart
+# Copyright (C) 2018 Andy Stewart
 #
 # Author:     Andy Stewart <lazycat.manatee@gmail.com>
 # Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
@@ -19,29 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-xlib_display = None
+from PyQt5.QtCore import QUrl
+from PyQt5.QtGui import QColor
+from core.browser import BrowserBuffer
+import os
 
-def get_xlib_display():
-    global xlib_display
+class AppBuffer(BrowserBuffer):
+    def __init__(self, buffer_id, url, config_dir, arguments, emacs_var_dict):
+        BrowserBuffer.__init__(self, buffer_id, url, config_dir, arguments, emacs_var_dict, False, QColor(255, 255, 255, 255))
 
-    if xlib_display is None:
-        from Xlib import display
-        xlib_display = display.Display()
+        self.url = url
 
-    return xlib_display
+        self.load_org_html_file()
 
-def grab_focus(window_id):
-    global xlib_display
+    def load_org_html_file(self):
+        self.buffer_widget.setUrl(QUrl.fromLocalFile(os.path.splitext(self.url)[0]+".html"))
 
-    from Xlib import X
-    xwindow = xlib_display.create_resource_object("window", window_id)
-
-    xwindow.set_input_focus(X.RevertToNone, X.CurrentTime)
-    xwindow.configure(stack_mode=X.Above)
-
-    xlib_display.sync()
-
-def get_parent_window_id(window_id):
-    xlib_display = get_xlib_display()
-
-    return xlib_display.create_resource_object("window", window_id).query_tree().parent.__window__()
+    def update_with_data(self, update_data):
+        self.load_org_html_file()
+        self.buffer_widget.reload()
