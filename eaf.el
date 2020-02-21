@@ -1,17 +1,19 @@
-;; eaf.el --- Emacs application framework  -*- lexical-binding: t; -*-
+;;; eaf.el --- Emacs application framework  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 
 ;; Filename: eaf.el
 ;; Description: Emacs application framework
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
-;; Copyright (C) 2018, Andy Stewart, all rights reserved.
 ;; Created: 2018-06-15 14:10:12
 ;; Version: 0.5
-;; Last-Updated: Sat Feb  8 20:14:10 2020 (-0500)
-;;           By: Mingde (Matthew) Zeng
 ;; URL: http://www.emacswiki.org/emacs/download/eaf.el
 ;; Keywords:
 ;; Compatibility: GNU Emacs 27.0.50
+
+;; Last-Updated: Sat Feb  8 20:14:10 2020 (-0500)
+;;           By: Mingde (Matthew) Zeng
 ;;
 ;; Features that might be required by this library:
 ;;
