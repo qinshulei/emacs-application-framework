@@ -43,19 +43,33 @@ EAF is an extensible framework, one can develop any Qt5 application and integrat
 
 ```Bash
 # ubuntu 18.04
+sudo apt-get update && \
+    apt-get autoclean
+
+sudo apt-get update && apt-get install \
+    -y --no-install-recommends \
+    python3-pip \
+    python3-setuptools
+
 sudo apt-get install python3
 sudo apt-get install python3-pip
-cat >  ~/.pip/pip.conf <<-EOF
+sudo cat >  ~/.pip/pip.conf <<-EOF
 [global]
 index-url = https://pypi.tuna.tsinghua.edu.cn/simple
 
 [install]
 trusted-host = https://pypi.tuna.tsinghua.edu.cn
 EOF
+
+pip3 install dbus-python python-xlib pyqt5 pyqtwebengine pymupdf grip qrcode feedparser aria2p
+
+sudo pip3 install --upgrade pip
+sudo python3 -m pip install pyqt5==5.14 pyqtchart==5.14
+
+# virtual env
 sudo apt-get install virtualenvwrapper
 mkvirtualenv -p /usr/bin/python3.6 env36
 workon env36
-pip3 install dbus-python python-xlib pyqt5 pyqtwebengine pymupdf grip qrcode feedparser aria2p
 ```
 
 3. Clone this repository.
